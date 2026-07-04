@@ -1,0 +1,365 @@
+{
+  "Application": {
+    "Screens": [
+      {
+        "Name": "Screen1",
+        "Components": [
+          {
+            "Type": "Image",
+            "Name": "Bg1",
+            "Width": 240,
+            "Height": 320,
+            "RelativeFilename": "bgpingpong1.png"
+          },
+          {
+            "Type": "FlexButton",
+            "Name": "oneButton",
+            "X": 20,
+            "Y": 80,
+            "Width": 200,
+            "Height": 80,
+            "ButtonTrigger": {
+              "Type": "ClickButtonTrigger"
+            },
+            "ButtonStyles": [
+              {
+                "Type": "ImageButtonStyle",
+                "ImageReleased": "pingpong1p.png",
+                "ImagePressed": "pingpong1p.png"
+              }
+            ]
+          },
+          {
+            "Type": "FlexButton",
+            "Name": "twoButton",
+            "X": 20,
+            "Y": 172,
+            "Width": 200,
+            "Height": 80,
+            "ButtonTrigger": {
+              "Type": "ClickButtonTrigger"
+            },
+            "ButtonStyles": [
+              {
+                "Type": "ImageButtonStyle",
+                "ImageReleased": "pingpong2p.png",
+                "ImagePressed": "pingpong2p.png"
+              }
+            ]
+          }
+        ],
+        "Interactions": [
+          {
+            "InteractionName": "OnePlayer_Selected",
+            "Trigger": {
+              "Type": "TriggerClicked",
+              "TriggerComponent": "oneButton"
+            },
+            "Action": {
+              "Type": "ActionCustom",
+              "FunctionName": "selectVsCpu"
+            }
+          },
+          {
+            "InteractionName": "TwoPlayer_Selected",
+            "Trigger": {
+              "Type": "TriggerClicked",
+              "TriggerComponent": "twoButton"
+            },
+            "Action": {
+              "Type": "ActionCustom",
+              "FunctionName": "selectTwoPlayers"
+            }
+          }
+        ]
+      },
+      {
+        "Name": "Screen2",
+        "CanvasBufferSize": 3600,
+        "Components": [
+          {
+            "Type": "Image",
+            "Name": "Bg2",
+            "Width": 240,
+            "Height": 320,
+            "RelativeFilename": "bgpingpong2.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "San",
+            "X": 24,
+            "Y": 58,
+            "Width": 192,
+            "Height": 241,
+            "RelativeFilename": "san2.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "p1",
+            "X": 96,
+            "Y": 280,
+            "Width": 48,
+            "Height": 11,
+            "RelativeFilename": "thanh2.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "p2",
+            "X": 96,
+            "Y": 65,
+            "Width": 48,
+            "Height": 11,
+            "RelativeFilename": "thanh2.png"
+          },
+          {
+            "Type": "Circle",
+            "Name": "circle1",
+            "X": 100,
+            "Y": 128,
+            "Width": 12,
+            "Height": 12,
+            "Color": {
+              "Red": 255
+            },
+            "CenterX": 6.0,
+            "CenterY": 6.0,
+            "Radius": 6.0,
+            "EndAngle": 360.0,
+            "CapPrecision": "Butt"
+          },
+          {
+            "Type": "FlexButton",
+            "Name": "home",
+            "X": 9,
+            "Y": 9,
+            "Width": 30,
+            "Height": 30,
+            "ButtonTrigger": {
+              "Type": "ClickButtonTrigger"
+            },
+            "ButtonStyles": [
+              {
+                "Type": "ImageButtonStyle",
+                "ImageReleased": "home2.png",
+                "ImagePressed": "home2.png"
+              }
+            ]
+          },
+          {
+            "Type": "FlexButton",
+            "Name": "pause",
+            "X": 201,
+            "Y": 9,
+            "Width": 30,
+            "Height": 30,
+            "ButtonTrigger": {
+              "Type": "ClickButtonTrigger"
+            },
+            "ButtonStyles": [
+              {
+                "Type": "ImageButtonStyle",
+                "ImageReleased": "pause2.png",
+                "ImagePressed": "pause2.png"
+              }
+            ]
+          },
+          {
+            "Type": "Box",
+            "Name": "box1",
+            "X": 25,
+            "Y": 58,
+            "Width": 192,
+            "Height": 241,
+            "Color": {
+              "Red": 204,
+              "Green": 202,
+              "Blue": 202
+            }
+          },
+          {
+            "Type": "Image",
+            "Name": "over",
+            "X": 71,
+            "Y": 39,
+            "Width": 100,
+            "Height": 133,
+            "RelativeFilename": "game over screen pixel-1.png"
+          },
+          {
+            "Type": "TextArea",
+            "Name": "textResult1",
+            "X": 57,
+            "Y": 160,
+            "Width": 134,
+            "Height": 24,
+            "TextId": "__SingleUse_Y1MM",
+            "TextRotation": "0",
+            "AutoSize": true,
+            "Wildcard1": {
+              "TextId": "__SingleUse_5WFD"
+            }
+          },
+          {
+            "Type": "FlexButton",
+            "Name": "flexButton1",
+            "X": 50,
+            "Y": 213,
+            "Width": 151,
+            "Height": 50,
+            "ButtonTrigger": {
+              "Type": "ClickButtonTrigger"
+            },
+            "ButtonStyles": [
+              {
+                "Type": "TextButtonStyle",
+                "X": 1,
+                "Y": 10,
+                "TextId": "__SingleUse_LUDV",
+                "TextRotation": "0",
+                "ColorReleased": {
+                  "Red": 10,
+                  "Green": 10,
+                  "Blue": 10
+                },
+                "ColorPressed": {
+                  "Red": 10,
+                  "Green": 10,
+                  "Blue": 10
+                }
+              },
+              {
+                "Type": "BoxWithBorderButtonStyle",
+                "Width": 151,
+                "Height": 50,
+                "LockToFlexButtonSize": true,
+                "BorderSize": 5,
+                "ColorReleased": {
+                  "Green": 102,
+                  "Blue": 153
+                },
+                "ColorPressed": {
+                  "Green": 153,
+                  "Blue": 204
+                },
+                "ColorBorderReleased": {
+                  "Green": 51,
+                  "Blue": 102
+                },
+                "ColorBorderPressed": {
+                  "Red": 51,
+                  "Green": 102,
+                  "Blue": 153
+                }
+              }
+            ]
+          }
+        ],
+        "Interactions": [
+          {
+            "InteractionName": "Pause_Clicked",
+            "Trigger": {
+              "Type": "TriggerClicked",
+              "TriggerComponent": "pause"
+            },
+            "Action": {
+              "Type": "ActionCustom",
+              "FunctionName": "togglePause"
+            }
+          },
+          {
+            "InteractionName": "Home_Clicked",
+            "Trigger": {
+              "Type": "TriggerClicked",
+              "TriggerComponent": "home"
+            },
+            "Action": {
+              "Type": "ActionCustom",
+              "FunctionName": "goHomeSafely"
+            }
+          },
+          {
+            "InteractionName": "RedBall_Moving",
+            "Trigger": {
+              "Type": "TriggerOnEveryTick",
+              "TickCount": 1
+            },
+            "Action": {
+              "Type": "ActionCustom",
+              "FunctionName": "ball_timertick"
+            }
+          },
+          {
+            "InteractionName": "playAgain",
+            "Trigger": {
+              "Type": "TriggerClicked",
+              "TriggerComponent": "flexButton1"
+            },
+            "Action": {
+              "Type": "ActionCustom",
+              "FunctionName": "playAgain"
+            }
+          }
+        ]
+      }
+    ],
+    "CustomContainerDefinitions": [],
+    "Name": "Project-Nhung",
+    "Resolution": {
+      "Width": 240,
+      "Height": 320
+    },
+    "SelectedColorDepth": 16,
+    "StartupScreenName": "Screen1",
+    "SelectedStartupLanguage": "GB",
+    "TouchGfxPath": "../Middlewares/ST/touchgfx",
+    "UIPath": ".",
+    "AvailableColorDepths": [
+      16
+    ],
+    "AvailableLCDs": {
+      "16": "LCD16bpp"
+    },
+    "AvailableSections": [
+      "ExtFlashSection",
+      "IntFlashSection"
+    ],
+    "AvailableResolutions": [
+      {
+        "Width": 240,
+        "Height": 320
+      }
+    ],
+    "PhysicalButtons": [],
+    "FrameworkFeatures": {
+      "LCD16bpp": {
+        "Id": "LCD16bpp",
+        "IsEnabled": true
+      }
+    },
+    "GenerateAssetsCommand": "make -f simulator/gcc/Makefile assets -j8",
+    "PostGenerateCommand": "touchgfx update_project --project-file=simulator/msvs/Application.vcxproj",
+    "PostGenerateTargetCommand": "touchgfx update_project",
+    "CompileSimulatorCommand": "make -f simulator/gcc/Makefile -j8",
+    "RunSimulatorCommand": "build\\bin\\simulator.exe",
+    "CompileTargetCommandOverride": "make -f ../gcc/Makefile -j8",
+    "FlashTargetCommandOverride": "make -f ../gcc/Makefile flash",
+    "LandscapeSkinX": 0,
+    "LandscapeSkinY": 0,
+    "PortraitSkinX": 0,
+    "PortraitSkinY": 0,
+    "DisplayOrientation": "Portrait",
+    "Family": "STM32F4",
+    "SubFamily": "STM32F429/439",
+    "Toolchain": "STM32CubeIDE",
+    "Platform": "m4",
+    "ProjectFile": "../STM32F429I_DISCO_REV_D01.ioc",
+    "OptionalComponentsRoot": "../Middlewares/ST/touchgfx_components",
+    "OptionalComponents": [],
+    "AdditionalFeatures": [
+      "CWRVector",
+      "VectorFonts"
+    ]
+  },
+  "Version": "4.26.1",
+  "CreatedBy": "4.26.1"
+}
