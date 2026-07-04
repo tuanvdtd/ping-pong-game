@@ -22,11 +22,17 @@ public:
 
 protected:
     void syncWidgets();
+    void setPauseButtonState(bool paused);
     void setResultPopupVisible(bool visible);
     void onGameOver();
+    void continueButtonCallbackHandler(
+        const touchgfx::AbstractButtonContainer& source);
 
     GameEngine gameEngine;
     bool gameOverPending;
+    touchgfx::Callback<Screen2View,
+                       const touchgfx::AbstractButtonContainer&>
+        continueButtonCallback;
 };
 
 #endif // SCREEN2VIEW_HPP

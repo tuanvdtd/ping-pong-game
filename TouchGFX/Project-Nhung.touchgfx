@@ -164,6 +164,25 @@
             ]
           },
           {
+            "Type": "FlexButton",
+            "Name": "continueButton",
+            "X": 201,
+            "Y": 9,
+            "Width": 30,
+            "Height": 30,
+            "Visible": false,
+            "ButtonTrigger": {
+              "Type": "ClickButtonTrigger"
+            },
+            "ButtonStyles": [
+              {
+                "Type": "ImageButtonStyle",
+                "ImageReleased": "continue.png",
+                "ImagePressed": "continue.png"
+              }
+            ]
+          },
+          {
             "Type": "Box",
             "Name": "box1",
             "X": 25,

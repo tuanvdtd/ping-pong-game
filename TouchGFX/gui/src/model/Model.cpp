@@ -48,6 +48,15 @@ uint16_t Model::getPlayer2Input() const
     return player2Input;
 }
 
+bool Model::consumePa0ButtonPress()
+{
+#ifndef SIMULATOR
+    return AppBackend_ConsumePa0Press() != 0U;
+#else
+    return false;
+#endif
+}
+
 void Model::vibratePlayer1()
 {
 #ifndef SIMULATOR

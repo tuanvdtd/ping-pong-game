@@ -21,7 +21,7 @@
       <Text Id="__SingleUse_5WFD" Alignment="Left" TypographyId="Default">
         <Translation Language="GB">Player 1</Translation>
       </Text>
-      <Text Id="__SingleUse_Y1MM" Alignment="Left" TypographyId="Default">
+      <Text Id="__SingleUse_Y1MM" Alignment="Center" TypographyId="Default">
         <Translation Language="GB"> &lt;value&gt; Win</Translation>
       </Text>
     </TextGroup>

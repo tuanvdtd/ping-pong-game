@@ -485,6 +485,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/TouchGFX/generated/images/src/image_bgpingpong2.cpp</locationURI>
 		</link>
 		<link>
+			<name>Application/User/generated/image_continue.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/TouchGFX/generated/images/src/image_continue.cpp</locationURI>
+		</link>
+		<link>
 			<name>Application/User/generated/image_game_over_screen_pixel-1.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/TouchGFX/generated/images/src/image_game_over_screen_pixel-1.cpp</locationURI>

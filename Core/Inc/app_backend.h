@@ -15,6 +15,7 @@ enum
 };
 
 uint8_t AppBackend_GetLatestInput(uint16_t* player1, uint16_t* player2);
+uint8_t AppBackend_ConsumePa0Press(void);
 void AppBackend_SendHaptic(uint8_t command);
 
 #ifdef __cplusplus

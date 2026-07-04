@@ -32,6 +32,11 @@ uint16_t Screen2Presenter::getPlayer2Input() const
     return model->getPlayer2Input();
 }
 
+bool Screen2Presenter::consumePa0ButtonPress()
+{
+    return model->consumePa0ButtonPress();
+}
+
 void Screen2Presenter::vibratePlayer1()
 {
     model->vibratePlayer1();

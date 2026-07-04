@@ -106,6 +106,7 @@ uint8_t isRevD = 0; /* Applicable only for STM32F429I DISCOVERY REVD and above *
  */
 static volatile uint32_t latestInputMessage =
     ((uint32_t)500U << 16) | (uint32_t)500U;
+static volatile uint32_t pa0ButtonPressCount = 0U;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -933,6 +934,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : USER_BUTTON_Pin */
+  GPIO_InitStruct.Pin = USER_BUTTON_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(USER_BUTTON_GPIO_Port, &GPIO_InitStruct);
+
   /* USER CODE BEGIN MX_GPIO_Init_2 */
   /* USER CODE END MX_GPIO_Init_2 */
 }
@@ -1277,6 +1284,20 @@ uint8_t AppBackend_GetLatestInput(uint16_t* player1, uint16_t* player2)
   return 1U;
 }
 
+uint8_t AppBackend_ConsumePa0Press(void)
+{
+  static uint32_t consumedPressCount = 0U;
+  uint32_t publishedPressCount = pa0ButtonPressCount;
+
+  if (publishedPressCount == consumedPressCount)
+  {
+    return 0U;
+  }
+
+  consumedPressCount = publishedPressCount;
+  return 1U;
+}
+
 void AppBackend_SendHaptic(uint8_t command)
 {
   uint8_t discarded;
@@ -1320,6 +1341,9 @@ void StartHardwareTask(void *argument)
   uint32_t playerDeadline = 0U;
   uint32_t cpuDeadline = 0U;
   uint8_t hapticCommand;
+  uint8_t pa0CandidateState;
+  uint8_t pa0DebounceTicks = 0U;
+  uint8_t pa0StableState;
   uint8_t playerMotorActive = 0U;
   uint8_t cpuMotorActive = 0U;
   HAL_StatusTypeDef adcStatus;
@@ -1335,6 +1359,11 @@ void StartHardwareTask(void *argument)
 
   filteredPlayer1 = (int32_t)player1Raw << 4;
   filteredPlayer2 = (int32_t)player2Raw << 4;
+  pa0StableState =
+      (HAL_GPIO_ReadPin(USER_BUTTON_GPIO_Port, USER_BUTTON_Pin) == GPIO_PIN_SET)
+          ? 1U
+          : 0U;
+  pa0CandidateState = pa0StableState;
   debugDeadline = osKernelGetTickCount();
 
   for(;;)
@@ -1350,6 +1379,36 @@ void StartHardwareTask(void *argument)
     player2 = (uint16_t)(((uint32_t)(filteredPlayer2 >> 4) * 1000U) / 4095U);
     inputMessage = ((uint32_t)player2 << 16) | (uint32_t)player1;
     latestInputMessage = inputMessage;
+
+    {
+      const uint8_t pa0Sample =
+          (HAL_GPIO_ReadPin(USER_BUTTON_GPIO_Port, USER_BUTTON_Pin) ==
+           GPIO_PIN_SET)
+              ? 1U
+              : 0U;
+
+      if (pa0Sample != pa0CandidateState)
+      {
+        pa0CandidateState = pa0Sample;
+        pa0DebounceTicks = 1U;
+      }
+      else if (pa0DebounceTicks < 3U)
+      {
+        ++pa0DebounceTicks;
+      }
+
+      if ((pa0DebounceTicks >= 3U) &&
+          (pa0StableState != pa0CandidateState))
+      {
+        pa0StableState = pa0CandidateState;
+
+        if (pa0StableState != 0U)
+        {
+          ++pa0ButtonPressCount;
+          DebugUart_WriteText("[BUTTON] PA0 pressed\r\n");
+        }
+      }
+    }
 
     now = osKernelGetTickCount();
 
