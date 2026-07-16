@@ -26,6 +26,7 @@
 /* USER CODE BEGIN Includes */
 #include "Components/ili9341/ili9341.h"
 #include "app_backend.h"
+#include "pa0_gesture.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -55,6 +56,10 @@
 
 #define I2C3_TIMEOUT_MAX                    0x3000 /*<! The value of the maximal timeout for I2C waiting loops */
 #define SPI5_TIMEOUT_MAX                    0x1000
+
+#define PA0_DEBOUNCE_SAMPLES                3U
+#define PA0_DOUBLE_PRESS_WINDOW_TICKS       300U
+#define PA0_EVENT_TYPE_MASK                 0x3U
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -106,7 +111,11 @@ uint8_t isRevD = 0; /* Applicable only for STM32F429I DISCOVERY REVD and above *
  */
 static volatile uint32_t latestInputMessage =
     ((uint32_t)500U << 16) | (uint32_t)500U;
-static volatile uint32_t pa0ButtonPressCount = 0U;
+static Pa0GestureDetector pa0GestureDetector;
+static volatile uint32_t latestPa0Sample = 0U;
+static volatile uint32_t latestPa0EventMessage = 0U;
+static uint32_t pa0EventSequence = 0U;
+static uint32_t consumedPa0EventMessage = 0U;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -136,6 +145,10 @@ static void DebugUart_LogAdc(HAL_StatusTypeDef status,
 static HAL_StatusTypeDef ReadAdcChannel(uint32_t channel, uint16_t* value);
 static HAL_StatusTypeDef ReadSliderInputs(uint16_t* player1Raw,
                                           uint16_t* player2Raw);
+static void AppBackend_InitPa0Gesture(void);
+static uint32_t AppBackend_EnterCritical(void);
+static void AppBackend_ExitCritical(uint32_t primask);
+static void AppBackend_PublishPa0Event(Pa0GestureEvent event);
 
 static uint8_t            I2C3_ReadData(uint8_t Addr, uint8_t Reg);
 static void               I2C3_WriteData(uint8_t Addr, uint8_t Reg, uint8_t Value);
@@ -350,6 +363,48 @@ static HAL_StatusTypeDef ReadSliderInputs(uint16_t* player1Raw,
 
   return ReadAdcChannel(ADC_CHANNEL_13, player2Raw);
 }
+
+static void AppBackend_InitPa0Gesture(void)
+{
+  const uint8_t initialPressed =
+      (HAL_GPIO_ReadPin(USER_BUTTON_GPIO_Port, USER_BUTTON_Pin) == GPIO_PIN_SET)
+          ? 1U
+          : 0U;
+
+  latestPa0Sample = initialPressed;
+  Pa0GestureDetector_Init(&pa0GestureDetector,
+                          initialPressed,
+                          PA0_DEBOUNCE_SAMPLES,
+                          PA0_DOUBLE_PRESS_WINDOW_TICKS);
+}
+
+static uint32_t AppBackend_EnterCritical(void)
+{
+  const uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+  return primask;
+}
+
+static void AppBackend_ExitCritical(uint32_t primask)
+{
+  if ((primask & 1U) == 0U)
+  {
+    __enable_irq();
+  }
+}
+
+static void AppBackend_PublishPa0Event(Pa0GestureEvent event)
+{
+  if (event == PA0_GESTURE_EVENT_NONE)
+  {
+    return;
+  }
+
+  pa0EventSequence = (pa0EventSequence + 1U) &
+                     (UINT32_MAX >> 2U);
+  latestPa0EventMessage =
+      (pa0EventSequence << 2U) | ((uint32_t)event & PA0_EVENT_TYPE_MASK);
+}
 /* USER CODE END 0 */
 
 /**
@@ -394,6 +449,7 @@ int main(void)
   MX_TouchGFX_PreOSInit();
   /* USER CODE BEGIN 2 */
   DebugUart_Init();
+  AppBackend_InitPa0Gesture();
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -1284,18 +1340,28 @@ uint8_t AppBackend_GetLatestInput(uint16_t* player1, uint16_t* player2)
   return 1U;
 }
 
-uint8_t AppBackend_ConsumePa0Press(void)
+uint8_t AppBackend_ConsumePa0Event(void)
 {
-  static uint32_t consumedPressCount = 0U;
-  uint32_t publishedPressCount = pa0ButtonPressCount;
+  const uint32_t publishedEventMessage = latestPa0EventMessage;
 
-  if (publishedPressCount == consumedPressCount)
+  if (publishedEventMessage == consumedPa0EventMessage)
   {
-    return 0U;
+    return APP_PA0_EVENT_NONE;
   }
 
-  consumedPressCount = publishedPressCount;
-  return 1U;
+  consumedPa0EventMessage = publishedEventMessage;
+  return (uint8_t)(publishedEventMessage & PA0_EVENT_TYPE_MASK);
+}
+
+void AppBackend_ResetPa0Gesture(void)
+{
+  const uint32_t primask = AppBackend_EnterCritical();
+
+  Pa0GestureDetector_Reset(&pa0GestureDetector,
+                           (uint8_t)latestPa0Sample);
+  consumedPa0EventMessage = latestPa0EventMessage;
+
+  AppBackend_ExitCritical(primask);
 }
 
 void AppBackend_SendHaptic(uint8_t command)
@@ -1340,13 +1406,13 @@ void StartHardwareTask(void *argument)
   uint32_t debugDeadline;
   uint32_t playerDeadline = 0U;
   uint32_t cpuDeadline = 0U;
+  uint32_t primask;
   uint8_t hapticCommand;
-  uint8_t pa0CandidateState;
-  uint8_t pa0DebounceTicks = 0U;
-  uint8_t pa0StableState;
+  uint8_t pa0Sample;
   uint8_t playerMotorActive = 0U;
   uint8_t cpuMotorActive = 0U;
   HAL_StatusTypeDef adcStatus;
+  Pa0GestureEvent pa0Event;
   uint16_t player1;
   uint16_t player2;
   uint16_t player1Raw = 2048U;
@@ -1359,11 +1425,6 @@ void StartHardwareTask(void *argument)
 
   filteredPlayer1 = (int32_t)player1Raw << 4;
   filteredPlayer2 = (int32_t)player2Raw << 4;
-  pa0StableState =
-      (HAL_GPIO_ReadPin(USER_BUTTON_GPIO_Port, USER_BUTTON_Pin) == GPIO_PIN_SET)
-          ? 1U
-          : 0U;
-  pa0CandidateState = pa0StableState;
   debugDeadline = osKernelGetTickCount();
 
   for(;;)
@@ -1380,37 +1441,28 @@ void StartHardwareTask(void *argument)
     inputMessage = ((uint32_t)player2 << 16) | (uint32_t)player1;
     latestInputMessage = inputMessage;
 
-    {
-      const uint8_t pa0Sample =
-          (HAL_GPIO_ReadPin(USER_BUTTON_GPIO_Port, USER_BUTTON_Pin) ==
-           GPIO_PIN_SET)
-              ? 1U
-              : 0U;
-
-      if (pa0Sample != pa0CandidateState)
-      {
-        pa0CandidateState = pa0Sample;
-        pa0DebounceTicks = 1U;
-      }
-      else if (pa0DebounceTicks < 3U)
-      {
-        ++pa0DebounceTicks;
-      }
-
-      if ((pa0DebounceTicks >= 3U) &&
-          (pa0StableState != pa0CandidateState))
-      {
-        pa0StableState = pa0CandidateState;
-
-        if (pa0StableState != 0U)
-        {
-          ++pa0ButtonPressCount;
-          DebugUart_WriteText("[BUTTON] PA0 pressed\r\n");
-        }
-      }
-    }
-
     now = osKernelGetTickCount();
+    pa0Sample =
+        (HAL_GPIO_ReadPin(USER_BUTTON_GPIO_Port, USER_BUTTON_Pin) == GPIO_PIN_SET)
+            ? 1U
+            : 0U;
+
+    primask = AppBackend_EnterCritical();
+    latestPa0Sample = pa0Sample;
+    pa0Event = Pa0GestureDetector_Update(&pa0GestureDetector,
+                                         pa0Sample,
+                                         now);
+    AppBackend_PublishPa0Event(pa0Event);
+    AppBackend_ExitCritical(primask);
+
+    if (pa0Event == PA0_GESTURE_EVENT_SINGLE_PRESS)
+    {
+      DebugUart_WriteText("[BUTTON] PA0 single press\r\n");
+    }
+    else if (pa0Event == PA0_GESTURE_EVENT_DOUBLE_PRESS)
+    {
+      DebugUart_WriteText("[BUTTON] PA0 double press\r\n");
+    }
 
     if ((int32_t)(now - debugDeadline) >= 0)
     {

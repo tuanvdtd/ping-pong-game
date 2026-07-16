@@ -1,21 +1,6 @@
 #include <gui/screen2_screen/Screen2View.hpp>
 #include <texts/TextKeysAndLanguages.hpp>
 
-namespace
-{
-enum class Pa0ButtonAction : uint8_t
-{
-    PAUSE,
-    HOME
-};
-
-/*
- * Change only this value to choose what the on-board PA0 USER button does:
- * Pa0ButtonAction::PAUSE or Pa0ButtonAction::HOME.
- */
-constexpr Pa0ButtonAction PA0_BUTTON_ACTION = Pa0ButtonAction::PAUSE;
-}
-
 Screen2View::Screen2View()
     : gameEngine(),
       gameOverPending(false),
@@ -31,7 +16,7 @@ void Screen2View::setupScreen()
     Screen2ViewBase::setupScreen();
     gameEngine.reset(presenter->getGameMode());
     gameOverPending = false;
-    (void)presenter->consumePa0ButtonPress();
+    presenter->resetPa0Gesture();
     continueButton.setAction(continueButtonCallback);
     setPauseButtonState(false);
     setResultPopupVisible(false);
@@ -41,19 +26,22 @@ void Screen2View::setupScreen()
 void Screen2View::tearDownScreen()
 {
     presenter->stopAllHaptics();
+    presenter->resetPa0Gesture();
     Screen2ViewBase::tearDownScreen();
 }
 
 void Screen2View::ball_timertick()
 {
-    if (presenter->consumePa0ButtonPress())
-    {
-        if (PA0_BUTTON_ACTION == Pa0ButtonAction::HOME)
-        {
-            goHomeSafely();
-            return;
-        }
+    const Pa0ButtonEvent pa0Event = presenter->consumePa0ButtonEvent();
 
+    if (pa0Event == Pa0ButtonEvent::DOUBLE_PRESS)
+    {
+        goHomeSafely();
+        return;
+    }
+
+    if (pa0Event == Pa0ButtonEvent::SINGLE_PRESS)
+    {
         togglePause();
     }
 

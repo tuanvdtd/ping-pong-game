@@ -24,4 +24,11 @@ enum class GameWinner : uint8_t
     PLAYER_2
 };
 
+enum class Pa0ButtonEvent : uint8_t
+{
+    NONE,
+    SINGLE_PRESS,
+    DOUBLE_PRESS
+};
+
 #endif // GAME_TYPES_HPP

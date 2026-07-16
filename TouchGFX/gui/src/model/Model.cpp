@@ -48,12 +48,31 @@ uint16_t Model::getPlayer2Input() const
     return player2Input;
 }
 
-bool Model::consumePa0ButtonPress()
+Pa0ButtonEvent Model::consumePa0ButtonEvent()
 {
 #ifndef SIMULATOR
-    return AppBackend_ConsumePa0Press() != 0U;
+    const uint8_t event = AppBackend_ConsumePa0Event();
+
+    if (event == APP_PA0_EVENT_SINGLE_PRESS)
+    {
+        return Pa0ButtonEvent::SINGLE_PRESS;
+    }
+
+    if (event == APP_PA0_EVENT_DOUBLE_PRESS)
+    {
+        return Pa0ButtonEvent::DOUBLE_PRESS;
+    }
 #else
-    return false;
+    /* The simulator has no on-board PA0 USER button. */
+#endif
+
+    return Pa0ButtonEvent::NONE;
+}
+
+void Model::resetPa0Gesture()
+{
+#ifndef SIMULATOR
+    AppBackend_ResetPa0Gesture();
 #endif
 }
 

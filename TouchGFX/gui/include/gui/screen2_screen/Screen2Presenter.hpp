@@ -28,7 +28,8 @@ public:
     GameMode getGameMode() const;
     uint16_t getPlayer1Input() const;
     uint16_t getPlayer2Input() const;
-    bool consumePa0ButtonPress();
+    Pa0ButtonEvent consumePa0ButtonEvent();
+    void resetPa0Gesture();
 
     void vibratePlayer1();
     void vibratePlayer2();
