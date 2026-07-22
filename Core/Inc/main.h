@@ -58,8 +58,6 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define USER_BUTTON_Pin GPIO_PIN_0
-#define USER_BUTTON_GPIO_Port GPIOA
 #define VSYNC_FREQ_Pin GPIO_PIN_2
 #define VSYNC_FREQ_GPIO_Port GPIOE
 #define RENDER_TIME_Pin GPIO_PIN_3

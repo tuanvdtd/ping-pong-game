@@ -951,13 +951,10 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOE, VSYNC_FREQ_Pin|RENDER_TIME_Pin|FRAME_RATE_Pin|MCU_ACTIVE_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, MOTOR_PLAYER_Pin|MOTOR_CPU_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(SPI5_NCS_GPIO_Port, SPI5_NCS_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, SPI5_NCS_Pin, GPIO_PIN_SET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2|MOTOR_PLAYER_Pin|MOTOR_CPU_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12|GPIO_PIN_13, GPIO_PIN_RESET);
@@ -983,6 +980,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : PA0 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
   /*Configure GPIO pins : PD12 PD13 */
   GPIO_InitStruct.Pin = GPIO_PIN_12|GPIO_PIN_13;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -990,11 +993,9 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : USER_BUTTON_Pin */
-  GPIO_InitStruct.Pin = USER_BUTTON_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  HAL_GPIO_Init(USER_BUTTON_GPIO_Port, &GPIO_InitStruct);
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
   /* USER CODE END MX_GPIO_Init_2 */
@@ -1060,6 +1061,39 @@ static void BSP_SDRAM_Initialization_Sequence(SDRAM_HandleTypeDef *hsdram, FMC_S
   /* Step 6: Set the refresh rate counter */
   /* Set the device refresh rate */
   HAL_SDRAM_ProgramRefreshRate(hsdram, REFRESH_COUNT);
+}
+/* Dán đoạn code này vào ngay bên dưới hàm BSP_SDRAM_Initialization_Sequence */
+
+static uint32_t last_pa0_interrupt_time = 0;
+static uint32_t press_count = 0;
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    if (GPIO_Pin == USER_Btn_Pin) // Nút PA0
+    {
+        uint32_t now = HAL_GetTick();
+        
+        // 1. Chống dội phím (Debounce 50ms)
+        if (now - last_pa0_interrupt_time < 50) return;
+
+        // 2. Phân loại bấm 1 lần hay bấm đúp
+        if (now - last_pa0_interrupt_time < 350) {
+            press_count++;
+        } else {
+            press_count = 1;
+        }
+        last_pa0_interrupt_time = now;
+
+        // 3. Nếu bấm 2 lần -> Báo Về Home
+        if (press_count == 2) {
+            AppBackend_PublishPa0Event(APP_PA0_EVENT_DOUBLE_PRESS);
+            press_count = 0;
+        }
+        // 4. Nếu bấm 1 lần -> Báo Pause
+        else if (press_count == 1) {
+            AppBackend_PublishPa0Event(APP_PA0_EVENT_SINGLE_PRESS);
+        }
+    }
 }
 
 /**
@@ -1442,6 +1476,8 @@ void StartHardwareTask(void *argument)
     latestInputMessage = inputMessage;
 
     now = osKernelGetTickCount();
+    /* PA0 Polling disabled - handled by EXTI Interrupt in HAL_GPIO_EXTI_Callback */
+    /*
     pa0Sample =
         (HAL_GPIO_ReadPin(USER_BUTTON_GPIO_Port, USER_BUTTON_Pin) == GPIO_PIN_SET)
             ? 1U
@@ -1463,6 +1499,7 @@ void StartHardwareTask(void *argument)
     {
       DebugUart_WriteText("[BUTTON] PA0 double press\r\n");
     }
+    */
 
     if ((int32_t)(now - debugDeadline) >= 0)
     {
