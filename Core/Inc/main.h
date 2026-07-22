@@ -77,6 +77,10 @@ void Error_Handler(void);
 #define MOTOR_ON_STATE  GPIO_PIN_SET
 #define MOTOR_OFF_STATE GPIO_PIN_RESET
 
+#define USER_BUTTON_Pin       GPIO_PIN_0
+#define USER_BUTTON_GPIO_Port GPIOA
+#define USER_Btn_Pin          GPIO_PIN_0
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
