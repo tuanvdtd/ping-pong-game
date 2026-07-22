@@ -25,6 +25,8 @@ public:
         mode = newMode;
         state = GameState::READY;
         winner = GameWinner::NONE;
+        player1Lives = 3U;
+        player2Lives = 3U;
         bottomPaddleX = PADDLE_CENTER_X;
         topPaddleX = PADDLE_CENTER_X;
         cpuTargetX = PADDLE_CENTER_X;
@@ -94,18 +96,44 @@ public:
         const int16_t ballY = getBallY();
         if ((ballY + BALL_SIZE) < FIELD_TOP)
         {
-            state = GameState::GAME_OVER;
-            winner = GameWinner::PLAYER_1;
-            events = (uint8_t)(events | EVENT_GAME_OVER);
+            if (player2Lives > 0U) { --player2Lives; }
+            if (player2Lives == 0U)
+            {
+                state = GameState::GAME_OVER;
+                winner = GameWinner::PLAYER_1;
+                events = (uint8_t)(events | EVENT_GAME_OVER);
+            }
+            else
+            {
+                respawnBall(1);
+            }
         }
         else if (ballY > FIELD_BOTTOM)
         {
-            state = GameState::GAME_OVER;
-            winner = GameWinner::PLAYER_2;
-            events = (uint8_t)(events | EVENT_GAME_OVER);
+            if (player1Lives > 0U) { --player1Lives; }
+            if (player1Lives == 0U)
+            {
+                state = GameState::GAME_OVER;
+                winner = GameWinner::PLAYER_2;
+                events = (uint8_t)(events | EVENT_GAME_OVER);
+            }
+            else
+            {
+                respawnBall(-1);
+            }
         }
 
         return events;
+    }
+
+    void respawnBall(int16_t serveDirectionY)
+    {
+        ballXQ8 = BALL_START_X * FIXED_ONE;
+        ballYQ8 = BALL_START_Y * FIXED_ONE;
+        ballVelocityXQ8 = (rallyCount % 2 == 0) ? 320 : -320;
+        ballVelocityYQ8 = (serveDirectionY > 0) ? 512 : -512;
+        state = GameState::READY;
+        readyTicks = 0U;
     }
 
     void togglePause()
@@ -118,6 +146,16 @@ public:
         {
             state = GameState::PLAYING;
         }
+    }
+
+    uint8_t getPlayer1Lives() const
+    {
+        return player1Lives;
+    }
+
+    uint8_t getPlayer2Lives() const
+    {
+        return player2Lives;
     }
 
     int16_t getBottomPaddleX() const
@@ -183,6 +221,8 @@ private:
     GameMode mode;
     GameState state;
     GameWinner winner;
+    uint8_t player1Lives;
+    uint8_t player2Lives;
 
     int16_t bottomPaddleX;
     int16_t topPaddleX;

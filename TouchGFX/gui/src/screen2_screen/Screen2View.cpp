@@ -1,5 +1,6 @@
 #include <gui/screen2_screen/Screen2View.hpp>
 #include <texts/TextKeysAndLanguages.hpp>
+#include <touchgfx/Color.hpp>
 
 Screen2View::Screen2View()
     : gameEngine(),
@@ -16,6 +17,20 @@ void Screen2View::setupScreen()
     Screen2ViewBase::setupScreen();
     gameEngine.reset(presenter->getGameMode());
     gameOverPending = false;
+
+    for (int i = 0; i < 3; i++)
+    {
+        p1LifeBox[i].setPosition(24 + (i * 14), 300, 10, 10);
+        p1LifeBox[i].setColor(touchgfx::Color::getColorFromRGB(0, 240, 255));
+        p1LifeBox[i].setVisible(true);
+        add(p1LifeBox[i]);
+
+        p2LifeBox[i].setPosition(170 + (i * 14), 46, 10, 10);
+        p2LifeBox[i].setColor(touchgfx::Color::getColorFromRGB(255, 60, 180));
+        p2LifeBox[i].setVisible(true);
+        add(p2LifeBox[i]);
+    }
+
     presenter->resetPa0Gesture();
     continueButton.setAction(continueButtonCallback);
     setPauseButtonState(false);
@@ -131,6 +146,28 @@ void Screen2View::syncWidgets()
     if ((circle1.getX() != ballX) || (circle1.getY() != ballY))
     {
         circle1.moveTo(ballX, ballY);
+    }
+
+    const uint8_t p1Lives = gameEngine.getPlayer1Lives();
+    const uint8_t p2Lives = gameEngine.getPlayer2Lives();
+
+    for (int i = 0; i < 3; i++)
+    {
+        bool p1Vis = (i < p1Lives);
+        if (p1LifeBox[i].isVisible() != p1Vis)
+        {
+            p1LifeBox[i].invalidate();
+            p1LifeBox[i].setVisible(p1Vis);
+            p1LifeBox[i].invalidate();
+        }
+
+        bool p2Vis = (i < p2Lives);
+        if (p2LifeBox[i].isVisible() != p2Vis)
+        {
+            p2LifeBox[i].invalidate();
+            p2LifeBox[i].setVisible(p2Vis);
+            p2LifeBox[i].invalidate();
+        }
     }
 }
 

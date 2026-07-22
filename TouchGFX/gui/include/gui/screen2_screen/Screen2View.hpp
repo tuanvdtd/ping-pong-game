@@ -30,6 +30,8 @@ protected:
 
     GameEngine gameEngine;
     bool gameOverPending;
+    touchgfx::Box p1LifeBox[3];
+    touchgfx::Box p2LifeBox[3];
     touchgfx::Callback<Screen2View,
                        const touchgfx::AbstractButtonContainer&>
         continueButtonCallback;
