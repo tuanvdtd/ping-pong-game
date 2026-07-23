@@ -55,7 +55,7 @@ __Sản phẩm__:
 
 | STT | Họ tên | MSSV | Công việc |
 |---:|---|---|---|
-| 1 | Đỗ Sơn Tùng | 20225425 | Xử lý tính toán góc bay, thiết kế giao diện TouchGFX, logic game, đọc ADC, haptic motor, kiểm thử và viết báo cáo |
+| 1 | Đỗ Sơn Tùng | 20225425 | Xử lý tính toán góc bay, logic game, kiểm thử và viết báo cáo |
 
 
 ## Môi trường hoạt động
