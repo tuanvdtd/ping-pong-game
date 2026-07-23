@@ -56,6 +56,7 @@ __Sản phẩm__:
 | STT | Họ tên | MSSV | Công việc |
 |---:|---|---|---|
 | 1 | Đỗ Sơn Tùng | 20225425 | Xử lý tính toán góc bay, logic game, kiểm thử và viết báo cáo |
+| 2 | Lưu Tuấn Hùng | 20225131 | Cài đặt chân chip, Đọc dữ liệu từ thanh trượt bằng DMA, Cài đặt hàm ngắt nút PA0 |
 
 
 ## Môi trường hoạt động

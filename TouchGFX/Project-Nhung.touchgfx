@@ -130,8 +130,8 @@
           {
             "Type": "FlexButton",
             "Name": "home",
-            "X": 24,
-            "Y": 24,
+            "X": 10,
+            "Y": 16,
             "Width": 30,
             "Height": 30,
             "ButtonTrigger": {
@@ -148,8 +148,8 @@
           {
             "Type": "FlexButton",
             "Name": "pause",
-            "X": 191,
-            "Y": 24,
+            "X": 201,
+            "Y": 16,
             "Width": 30,
             "Height": 30,
             "ButtonTrigger": {
@@ -166,8 +166,8 @@
           {
             "Type": "FlexButton",
             "Name": "continueButton",
-            "X": 191,
-            "Y": 24,
+            "X": 201,
+            "Y": 16,
             "Width": 30,
             "Height": 30,
             "Visible": false,
