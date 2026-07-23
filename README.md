@@ -65,13 +65,8 @@ __Sản phẩm__:
 |---|---|
 | Board chính | STM32F429I-DISCO |
 | MCU | STM32F429ZIT6, Cortex-M4F, 180 MHz |
-| Màn hình | LCD 240 x 320 px, RGB565, hiển thị dọc |
-| LCD controller | ILI9341 |
-| Touch controller | STMPE811 qua I2C3 |
-| Bộ nhớ ngoài | SDRAM qua FMC |
-| Input người chơi | 2 biến trở trượt/xoay nối vào PA5 (ADC1_IN5) và PC3 (ADC2_IN13) qua Dual ADC Mode + DMA 32-bit |
-| Phản hồi | 2 module motor rung điều khiển bằng GPIO |
-| Nút có sẵn | USER button PA0, active-high, ngắt ngoài EXTI0 (Nhấn 1 lần: Pause / Nhấn đúp: Home) |
+| Màn hình | LCD 240 x 320 px|
+
 
 ### Phần mềm và công cụ
 
@@ -81,10 +76,7 @@ __Sản phẩm__:
 | STM32CubeMX | Cấu hình clock, GPIO, ADC, DMA, FreeRTOS, TouchGFX |
 | TouchGFX Designer | Thiết kế giao diện, sinh code UI và asset |
 | TouchGFX | 4.26.1 |
-| STM32Cube FW_F4 | V1.28.3 |
 | FreeRTOS CMSIS V2 | Quản lý `HardwareTask` và `GUI_Task` |
-| Ngôn ngữ | C cho HAL/backend, C++ cho TouchGFX và game engine |
-| Toolchain | GCC/ARM GCC qua STM32CubeIDE hoặc `gcc/Makefile` |
 
 ### Bill of materials
 
@@ -95,8 +87,6 @@ __Sản phẩm__:
 | 3 | Biến trở trượt 2 | Điều khiển paddle trên của Player 2 hoặc phục vụ chế độ hai người |
 | 4 | Module motor rung 1 | Phản hồi khi Player 1 đỡ bóng |
 | 5 | Module motor rung 2 | Phản hồi khi Player 2 hoặc CPU đỡ bóng |
-| 6 | Nguồn 5 V cho motor | Cấp dòng riêng cho hai module rung |
-| 8 | Cáp USB ST-LINK | Nạp firmware, debug và cấp nguồn board |
 
 ### Cấu trúc dự án
 
@@ -126,8 +116,6 @@ __Sản phẩm__:
 ├── Middlewares/
 ├── STM32CubeIDE/
 ├── gcc/
-├── tests/
-│   └── game_engine_two_players_test.cpp
 ├── STM32F429I_DISCO_REV_D01.ioc
 └── README.md
 ```
@@ -147,8 +135,6 @@ Mỗi biến trở có các chân `VCC`, `GND`, `OTA` và có thể có thêm nh
 | Biến trở Player 2 | GND | GND | GND chung |
 | Biến trở Player 2 | OTA | PC3 / ADC2_IN13 / P1 pin 15 | Điều khiển paddle trên trong `TWO_PLAYERS` (Master ADC1 + Slave ADC2) |
 
-Khuyến nghị đặt tụ 100 nF từ mỗi chân OTA xuống GND gần MCU để giảm nhiễu ADC.
-
 ### Kết nối module motor rung
 
 | Thiết bị | Chân module | Chân STM32F429I-DISCO | Ghi chú |
@@ -167,15 +153,7 @@ Module motor đã có tầng driver, không nối motor trần trực tiếp và
 | Chân | Chức năng |
 |---|---|
 | PA0 | USER button, active-high, Ngắt ngoài EXTI0 (Nhấn 1 lần: Pause / Nhấn đúp: Back Home) |
-| LTDC + DMA2D | Hiển thị LCD RGB565 |
-| I2C3 | Giao tiếp touch controller STMPE811 |
-| SPI5 | Kiểm tra revision board và hỗ trợ phần cứng display/touch |
-| FMC | Điều khiển SDRAM ngoài |
-| PE2, PE3, PE4, PE5 | Chân đo hiệu năng TouchGFX: VSYNC, render time, frame rate, MCU active |
 
-Ảnh sơ đồ đấu nối dự kiến:
-
-![Sơ đồ đấu nối phần cứng](docs/images/wiring-diagram.png)
 
 ## Tích hợp hệ thống
 
