@@ -258,6 +258,7 @@ private:
         return (value > 0) ? (int16_t)-value : value;
     }
 
+    // Ánh xạ tín hiệu điều khiển (ADC 0..1000) sang vị trí hoành độ X của Paddle trên màn hình
     static int16_t mapInputToPaddle(uint16_t input)
     {
         if (input > 1000U)
@@ -323,6 +324,7 @@ private:
         }
     }
 
+    // Xử lý va chạm bóng với hai tường dọc biên trái và biên phải (đổi chiều vận tốc Vx)
     void handleSideWalls()
     {
         int16_t ballX = getBallX();
@@ -339,6 +341,8 @@ private:
         }
     }
 
+    // Kiểm tra va chạm giữa quả bóng (hình tròn) và Paddle (hình chữ nhật)
+    // Thuật toán: Tìm điểm thuộc paddle gần tâm bóng nhất, sau đó tính khoảng cách Euclid (Squared distance)
     bool circleTouchesPaddle(int16_t paddleX, int16_t paddleY) const
     {
         const int16_t centerX = (int16_t)(getBallX() + BALL_RADIUS);
@@ -354,6 +358,8 @@ private:
                (BALL_RADIUS * BALL_RADIUS);
     }
 
+    // Xử lý tính toán góc bay và vận tốc ngang của bóng khi nảy từ paddle
+    // Độ lệch giữa tâm bóng và tâm paddle quyết định góc bật (nghiêng nhiều hơn nếu đánh ở mép paddle)
     void updateHorizontalVelocity(int16_t paddleX)
     {
         const int16_t paddleCenter = (int16_t)(paddleX + (PADDLE_WIDTH / 2));
