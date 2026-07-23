@@ -584,5 +584,5 @@ Hàm thay đổi vận tốc ngang của bóng theo độ lệch giữa tâm bó
 
 ## Video Demo Sản Phẩm
 
-- [Xem Video Demo Trải Nghiệm Game Ping Pong Thực Tế trên STM32F429I-DISCO](https://drive.google.com/file/d/1_jrsnEaHId9h15EpRHArU5YL4nVknlNT/view?usp=sharing)
+- [Xem Video Demo Game Ping Pong](https://drive.google.com/file/d/1_jrsnEaHId9h15EpRHArU5YL4nVknlNT/view?usp=sharing)
 
