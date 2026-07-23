@@ -50,12 +50,13 @@ __Sản phẩm__:
 
 ## Tác giả
 
-- Tên nhóm: `<bổ sung tên nhóm>`
+- Tên nhóm: `anti`
 - Thành viên trong nhóm:
 
 | STT | Họ tên | MSSV | Công việc |
 |---:|---|---|---|
-| 1 | `<bổ sung>` | `<bổ sung>` | Thiết kế giao diện TouchGFX, logic game, đọc ADC, haptic motor, kiểm thử và viết báo cáo |
+| 1 | Đỗ Sơn Tùng | 20225425 | Xử lý tính toán góc bay, thiết kế giao diện TouchGFX, logic game, đọc ADC, haptic motor, kiểm thử và viết báo cáo |
+
 
 ## Môi trường hoạt động
 
