@@ -38,7 +38,7 @@ __Sản phẩm__:
 6. Phản hồi rung bằng hai motor: paddle nào đỡ bóng thì motor tương ứng rung trong khoảng 80 ms.
 7. Hiển thị 3 ô mạng trực quan cho Player 1 (góc dưới trái) và Player 2/CPU (góc trên phải), giảm dần khi mất điểm.
 8. Popup kết quả hiển thị người thắng sau 3 mạng và nút `Chơi lại`.
-9. Nút USER PA0 trên board điều khiển ngắt ngắt ngoài EXTI0 (Nhấn 1 lần: Tạm dừng / Nhấn đúp: Về Home).
+9. Nút USER PA0 trên board điều khiển qua ngắt ngoài EXTI0 (Nhấn 1 lần: Tạm dừng / Nhấn đúp: Về Home).
 
 Ảnh minh họa dự kiến:
 
@@ -57,6 +57,7 @@ __Sản phẩm__:
 |---:|---|---|---|
 | 1 | Đỗ Sơn Tùng | 20225425 | Xử lý tính toán góc bay, logic game, kiểm thử và viết báo cáo |
 | 2 | Lưu Tuấn Hùng | 20225131 | Cài đặt chân chip, Đọc dữ liệu từ thanh trượt bằng DMA, Cài đặt hàm ngắt nút PA0 |
+| 3 | Đỗ Tất Tuấn | 20225423 | Tạo codebase, design các screen, xử lí queue motor rung |
 
 
 ## Môi trường hoạt động
@@ -163,7 +164,9 @@ Module motor đã có tầng driver, không nối motor trần trực tiếp và
 
 ```text
 Biến trở PA5/PC3
-    -> HardwareTask đọc ADC và lọc tín hiệu
+    -> ADC1 + ADC2 Dual Regular Simultaneous
+    -> DMA circular ghi mẫu 32-bit vào dual_adc_buffer
+    -> HardwareTask đọc buffer DMA và lọc tín hiệu
     -> latestInputMessage 32-bit chứa Player 1 + Player 2
     -> AppBackend_GetLatestInput()
     -> Model::tick()
@@ -195,7 +198,8 @@ Biến trở PA5/PC3
 |---|---|---|
 | Khởi tạo HAL/peripheral | `Core/Src/main.c` | Cấu hình clock, GPIO, DMA, ADC1, FMC, LTDC, DMA2D, TouchGFX và FreeRTOS |
 | Backend phần cứng | `Core/Src/main.c`, `Core/Inc/app_backend.h` | Publish input ADC, consume PA0, gửi lệnh haptic |
-| HardwareTask | `Core/Src/main.c` | Đọc ADC mỗi 10 ms, lọc tín hiệu, debounce PA0, xử lý queue motor |
+| HardwareTask | `Core/Src/main.c` | Đọc `dual_adc_buffer` mỗi 10 ms, lọc tín hiệu, publish input, xử lý queue motor |
+| PA0 interrupt | `Core/Src/stm32f4xx_it.c`, `Core/Src/main.c` | `EXTI0_IRQHandler()` chuyển ngắt PA0 vào `HAL_GPIO_EXTI_Callback()` để phát hiện nhấn đơn/nhấn đúp |
 | Model | `TouchGFX/gui/src/model/Model.cpp` | Lưu `GameMode`, giữ input mới nhất, gọi backend haptic |
 | Screen 1 | `Screen1View`, `Screen1Presenter` | Chọn `VS_CPU` hoặc `TWO_PLAYERS` |
 | Screen 2 | `Screen2View`, `Screen2Presenter` | Chạy tick game, đồng bộ widget, pause/home/play again, popup kết quả |
@@ -224,7 +228,9 @@ Biến trở PA5/PC3
 Khởi động
     -> HAL_Init()
     -> SystemClock_Config()
-    -> MX_GPIO_Init(), MX_ADC1_Init(), MX_TouchGFX_Init()
+    -> MX_GPIO_Init(), MX_DMA_Init(), MX_ADC1_Init(), MX_ADC2_Init(), MX_TouchGFX_Init()
+    -> HAL_ADC_Start(&hadc2)
+    -> HAL_ADCEx_MultiModeStart_DMA(&hadc1, &dual_adc_buffer, 1)
     -> Tạo hapticQueue
     -> Tạo HardwareTask và GUI_Task
     -> TouchGFX hiển thị Screen 1
@@ -280,18 +286,27 @@ Hàm lấy snapshot input mới nhất của hai người chơi từ biến `lat
 | `1` | Lấy dữ liệu thành công |
 | `0` | Con trỏ truyền vào không hợp lệ |
 
-#### `AppBackend_ConsumePa0Press`
+#### `AppBackend_ConsumePa0Event`
 
 ```c
-uint8_t AppBackend_ConsumePa0Press(void);
+uint8_t AppBackend_ConsumePa0Event(void);
 ```
 
-Hàm kiểm tra có sự kiện nhấn USER PA0 mới hay không. Backend chỉ tăng bộ đếm khi PA0 qua debounce và chuyển sang trạng thái nhấn.
+Hàm lấy và consume sự kiện USER PA0 mới nhất do ngắt EXTI0 publish. Mỗi sự kiện được đóng gói kèm sequence trong `latestPa0EventMessage`, vì vậy GUI chỉ xử lý một lần cho mỗi nhấn đơn hoặc nhấn đúp.
 
 | Giá trị trả về | Ý nghĩa |
 |---|---|
-| `1` | Có một lần nhấn mới chưa consume |
-| `0` | Không có lần nhấn mới |
+| `APP_PA0_EVENT_NONE` | Không có sự kiện mới |
+| `APP_PA0_EVENT_SINGLE_PRESS` | Nhấn đơn, dùng để Pause/Continue |
+| `APP_PA0_EVENT_DOUBLE_PRESS` | Nhấn đúp, dùng để Back Home |
+
+#### `AppBackend_ResetPa0Gesture`
+
+```c
+void AppBackend_ResetPa0Gesture(void);
+```
+
+Hàm reset trạng thái consume PA0 khi vào hoặc rời màn hình chơi. Việc này tránh việc một sự kiện PA0 cũ còn tồn tại trong backend bị xử lý lại ở lần vào Screen 2 tiếp theo.
 
 #### `AppBackend_SendHaptic`
 
@@ -307,30 +322,16 @@ Hàm gửi lệnh haptic từ GUI sang `HardwareTask` qua `hapticQueue`. Nếu q
 | `APP_HAPTIC_PLAYER_2` | Rung motor Player 2/CPU qua PC11 |
 | `APP_HAPTIC_STOP_ALL` | Reset queue và tắt cả hai motor |
 
-#### `ReadAdcChannel`
+#### `HAL_GPIO_EXTI_Callback`
 
 ```c
-static HAL_StatusTypeDef ReadAdcChannel(uint32_t channel, uint16_t* value);
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 ```
 
-Hàm cấu hình ADC1 sang một channel cụ thể, bỏ mẫu đầu sau khi đổi channel, sau đó lấy trung bình 8 mẫu độc lập. Cách đọc này giúp ổn định hơn khi chuyển qua lại giữa PA5 và PC3.
+Callback được HAL gọi sau khi `EXTI0_IRQHandler()` xử lý ngắt PA0. Code hiện tại chống dội theo mốc 50 ms, đếm cạnh nhấn rising-edge và phân loại:
 
-| Tham số | Ý nghĩa |
-|---|---|
-| `channel` | `ADC_CHANNEL_5` hoặc `ADC_CHANNEL_13` |
-| `value` | Con trỏ nhận giá trị ADC raw 12-bit |
-
-#### `ReadSliderInputs`
-
-```c
-static HAL_StatusTypeDef ReadSliderInputs(uint16_t* player1Raw,
-                                          uint16_t* player2Raw);
-```
-
-Hàm đọc lần lượt hai biến trở:
-
-- Player 1: PA5 / ADC1_IN5.
-- Player 2: PC3 / ADC1_IN13.
+- Nhấn đơn: publish `APP_PA0_EVENT_SINGLE_PRESS`.
+- Nhấn đúp: nếu có cạnh nhấn thứ hai trong khoảng 350 ms, publish `APP_PA0_EVENT_DOUBLE_PRESS`.
 
 #### `StartHardwareTask`
 
@@ -341,11 +342,11 @@ void StartHardwareTask(void *argument);
 Task FreeRTOS xử lý toàn bộ phần cứng phụ trợ cho game:
 
 - Tắt hai motor khi task bắt đầu.
-- Đọc hai kênh ADC theo chu kỳ 10 ms.
+- Đọc mẫu 32-bit mới nhất từ `dual_adc_buffer` theo chu kỳ 10 ms.
+- Tách 16 bit thấp thành raw Player 1 từ ADC1/PA5 và 16 bit cao thành raw Player 2 từ ADC2/PC3.
 - Lọc EMA bằng số nguyên.
 - Chuẩn hóa raw ADC 0..4095 về input 0..1000.
 - Publish input qua `latestInputMessage`.
-- Debounce PA0 trong 3 tick, tương đương khoảng 30 ms.
 - Log ADC qua USART1 115200 mỗi 500 ms.
 - Nhận lệnh haptic từ `hapticQueue`.
 - Bật motor tương ứng trong 80 ms rồi tự tắt.
@@ -417,7 +418,7 @@ void Screen2View::ball_timertick();
 
 Luồng xử lý:
 
-1. Kiểm tra PA0. Nếu PA0 được cấu hình `HOME` thì về Screen 1, nếu là `PAUSE` thì toggle pause.
+1. Consume PA0 event từ Presenter/Model. Nếu là `DOUBLE_PRESS` thì về Screen 1, nếu là `SINGLE_PRESS` thì toggle pause.
 2. Gọi `gameEngine.update(player1Input, player2Input)`.
 3. Nếu engine phát `EVENT_HIT_PLAYER_1`, gọi rung motor Player 1.
 4. Nếu engine phát `EVENT_HIT_PLAYER_2`, gọi rung motor Player 2/CPU.
@@ -563,16 +564,14 @@ Hàm thay đổi vận tốc ngang của bóng theo độ lệch giữa tâm bó
 - Đã có popup game-over và nút `Chơi lại`.
 
 
-### Ảnh kết quả cần bổ sung
+### Ảnh kết quả
 
 | Ảnh | Nội dung cần chụp | Đường dẫn gợi ý |
 |---|---|---|
 | 1 | Board STM32F429I-DISCO và dây nối biến trở/motor | `docs/images/hardware-setup.png` |
 | 2 | Màn hình chọn chế độ | `docs/images/screen1-menu.png` |
-| 3 | Chế độ chơi với CPU (hiển thị 3 mạng) | `docs/images/vs-cpu-gameplay.png` |
-| 4 | Chế độ hai người chơi (hiển thị 3 mạng) | `docs/images/two-player-gameplay.png` |
-| 5 | Popup kết quả Player 1 thắng | `docs/images/player1-win.png` |
-| 6 | Popup kết quả CPU hoặc Player 2 thắng | `docs/images/player2-or-cpu-win.png` |
+| 4 | Màn hinh người chơi (hiển thị 3 mạng) | `docs/images/screen2-gameplay.png` |
+| 5 | Popup kết quả Player 1 thắng | `docs/images/game-over-popup.png` |
 
 ## Hạn chế và hướng phát triển
 
