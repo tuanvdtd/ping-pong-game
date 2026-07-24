@@ -8,6 +8,10 @@ using namespace touchgfx;
 
 class Screen1View;
 
+/*
+ * Screen1Presenter - trung gian giữa Screen1View và Model (kiến trúc MVP).
+ * Nhiệm vụ duy nhất: chuyển lựa chọn chế độ chơi từ View xuống Model.
+ */
 class Screen1Presenter : public touchgfx::Presenter, public ModelListener
 {
 public:

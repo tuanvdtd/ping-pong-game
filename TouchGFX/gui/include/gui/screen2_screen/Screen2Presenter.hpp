@@ -8,6 +8,11 @@ using namespace touchgfx;
 
 class Screen2View;
 
+/*
+ * Screen2Presenter - trung gian giữa Screen2View và Model (kiến trúc MVP).
+ * Kế thừa ModelListener để có con trỏ `model`; mọi hàm chỉ chuyển tiếp
+ * yêu cầu của View xuống Model (xem giải thích trong Screen2Presenter.cpp).
+ */
 class Screen2Presenter : public touchgfx::Presenter, public ModelListener
 {
 public:
