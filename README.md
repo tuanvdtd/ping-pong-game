@@ -583,6 +583,7 @@ Hàm thay đổi vận tốc ngang của bóng theo độ lệch giữa tâm bó
 - Có thể thêm bước calibration để lưu min/max ADC thực tế cho từng loại biến trở.
 - Có thể bổ sung test tích hợp tự động cho build TouchGFX simulator.
 
-## Tài liệu tham khảo trong dự án
+## Video Demo Sản Phẩm
 
-- `readme-example.md`: skeleton báo cáo môn đồ án.
+- [Xem Video Demo Game Ping Pong](https://drive.google.com/file/d/1_jrsnEaHId9h15EpRHArU5YL4nVknlNT/view?usp=sharing)
+
