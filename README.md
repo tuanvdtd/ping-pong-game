@@ -59,7 +59,7 @@ __Sản phẩm__:
 | 2 | Lưu Tuấn Hùng | 20225131 | Cài đặt chân chip, Đọc dữ liệu từ thanh trượt bằng DMA, Cài đặt hàm ngắt nút PA0 |
 | 3 | Đỗ Tất Tuấn | 20225423 | Tạo codebase, design các screen, xử lí queue motor rung |
 | 4 | Vũ Tiến Thăng | 20225396 | Đọc dữ liệu biến phần cứng, tích hợp TouchGFX (Model/Presenter), ghép input với GameEngine xử lý UI |
-| 5 | Nguyễn Xuân Tùng | 20225426 | Đọc dữ liệu biến phần cứng, tích hợp TouchGFX (Model/Presenter), ghép input với GameEngine xử lý UI |
+| 5 | Nguyễn Xuân Tùng | 20225426 | Điều phối, kết nối hardware với TouchGFX (Model/Presenter), kết hợp GameEngine xử lý logic UI |
 
 ## Môi trường hoạt động
 
